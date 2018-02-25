@@ -63,9 +63,9 @@ class RetrofitConfig<T> {
         loggingInterceptor.setLevel(level);
         okHttpClient = new OkHttpClient.Builder()
                 .addInterceptor(loggingInterceptor)
-                .connectTimeout(CONNECT_TIMEOUT_MIL, TimeUnit.MILLISECONDS)
-                .readTimeout(READ_TIMEOUT_MIL, TimeUnit.MILLISECONDS)
-                .writeTimeout(WRITE_TIMEOUT_MIL, TimeUnit.MILLISECONDS)
+                .connectTimeout(connect, TimeUnit.MILLISECONDS)
+                .readTimeout(read, TimeUnit.MILLISECONDS)
+                .writeTimeout(write, TimeUnit.MILLISECONDS)
                 .build();
         return okHttpClient;
     }
