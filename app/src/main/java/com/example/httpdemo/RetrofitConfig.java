@@ -22,7 +22,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
  * 请求的配置文件类
  */
 class RetrofitConfig<T> {
-    private String baseUrl = "https://pay.tangchaogouwu.com/";
+    private String baseUrl = "https://www.baidu.com";
     private static Retrofit retrofitBook;
     //连接,读取，写入时间限制
     private static int CONNECT_TIMEOUT_MIL = 10000;
