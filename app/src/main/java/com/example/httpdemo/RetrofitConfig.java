@@ -1,21 +1,23 @@
 package com.example.httpdemo;
 
 /**
- * 创 建 人： 燕归来兮
- * 电子邮箱：zhoutao_it@126.com
- * 个人博客：http://www.zhoutaotao@xyz.com
- * 创建时间： 2017/5/23
- * 文件作用：
+ * @author 马山水
+ * @date 2018/3/22
+ * @desc 封装Retrofit的类，单例模式
  */
 
 import android.util.Log;
 
+import com.jakewharton.retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
+
 import java.util.concurrent.TimeUnit;
 
+import io.reactivex.Observable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.schedulers.Schedulers;
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
-import retrofit2.adapter.rxjava.RxJavaCallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 /**
@@ -23,34 +25,15 @@ import retrofit2.converter.gson.GsonConverterFactory;
  */
 class RetrofitConfig<T> {
     private String baseUrl = "https://www.baidu.com";
-    private static Retrofit retrofitBook;
+    private Retrofit retrofitBook;
     //连接,读取，写入时间限制
     private static int CONNECT_TIMEOUT_MIL = 10000;
     private static int READ_TIMEOUT_MIL = 10000;
     private static int WRITE_TIMEOUT_MIL = 10000;
-    private static OkHttpClient okHttpClient;
+    private OkHttpClient okHttpClient;
 
-    public int getConnectTimeoutMil() {
-        return CONNECT_TIMEOUT_MIL;
-    }
 
-    /**
-     * 采取默认时间设置，单位毫秒
-     *
-     * @return
-     */
-    public static OkHttpClient getDefaultRequestConfig() {
-        return getRequestConfig(CONNECT_TIMEOUT_MIL, READ_TIMEOUT_MIL, WRITE_TIMEOUT_MIL);
-    }
-
-    /**
-     * 配置连接器的请求时间，响应时间以及拦截日志等级
-     * @param connect
-     * @param read
-     * @param write
-     * @return
-     */
-    public static OkHttpClient getRequestConfig(int connect, int read, int write) {
+    private RetrofitConfig() {
         //日志显示级别
         HttpLoggingInterceptor.Level level = HttpLoggingInterceptor.Level.BODY;
         //新建log拦截器
@@ -63,30 +46,49 @@ class RetrofitConfig<T> {
         loggingInterceptor.setLevel(level);
         okHttpClient = new OkHttpClient.Builder()
                 .addInterceptor(loggingInterceptor)
-                .connectTimeout(connect, TimeUnit.MILLISECONDS)
-                .readTimeout(read, TimeUnit.MILLISECONDS)
-                .writeTimeout(write, TimeUnit.MILLISECONDS)
+                .connectTimeout(CONNECT_TIMEOUT_MIL, TimeUnit.MILLISECONDS)
+                .readTimeout(READ_TIMEOUT_MIL, TimeUnit.MILLISECONDS)
+                .writeTimeout(WRITE_TIMEOUT_MIL, TimeUnit.MILLISECONDS)
                 .build();
-        return okHttpClient;
     }
+
+
+    private static class SingletonHolder {
+        private static final RetrofitConfig<Object> retrofitObject = new RetrofitConfig<>();
+    }
+
+    public static RetrofitConfig<Object> getInstance() {
+        return SingletonHolder.retrofitObject;
+    }
+
 
     /**
      * 获取连接OkHttp连接器
-     * @param okHttpClient
+     *
      * @return
      */
-    public Retrofit getRetrofit(OkHttpClient okHttpClient, String type) {
-        if(Constant.TYPE.equals(type)){
-            if (retrofitBook == null) {
-                retrofitBook = new Retrofit.Builder()
-                        .baseUrl(baseUrl)
-                        .client(okHttpClient)
-                        .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
-                        .addConverterFactory(GsonConverterFactory.create())
-                        .build();
-            }
-            return retrofitBook;
+    public Retrofit getRetrofit() {
+        if (retrofitBook == null) {
+            retrofitBook = new Retrofit.Builder()
+                    .baseUrl(baseUrl)
+                    .client(okHttpClient)
+                    .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+                    .addConverterFactory(GsonConverterFactory.create())
+                    .build();
         }
-        return null;
+        return retrofitBook;
+    }
+
+    /**
+     * 开始一个请求任务
+     *
+     * @param observable 被观察对象（即一个网络请求任务）
+     * @param observer   观察者（对任务执行的全方位监听、线程控制、数据处理、异常处理）
+     */
+    public void statrPostTask(Observable observable, HttpObserver observer) {
+        observable.subscribeOn(Schedulers.io())
+                .unsubscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(observer);
     }
 }

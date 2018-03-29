@@ -4,10 +4,11 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
+import io.reactivex.Observable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.schedulers.Schedulers;
 import okhttp3.ResponseBody;
-import rx.Subscriber;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.schedulers.Schedulers;
+
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
@@ -17,45 +18,15 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        retrofitService = HttpRequestUtil.getRetrofitClient(RetrofitService.class.getName(), Constant.TYPE);
-        retrofitService.getSearchBook("name", 1)
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeOn(Schedulers.io())
-                .subscribe(new Subscriber<ResultBean>() {
-                    @Override
-                    public void onCompleted() {
+        retrofitService = HttpRequestUtil.getRetrofitClient(RetrofitService.class.getName());
 
-                    }
-
-                    @Override
-                    public void onError(Throwable e) {
-
-                    }
-
-                    @Override
-                    public void onNext(ResultBean resultBean) {
-
-                    }
-                });
-
-        retrofitService.get()
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeOn(Schedulers.io())
-                .subscribe(new Subscriber<ResponseBody>() {
-                    @Override
-                    public void onCompleted() {
-
-                    }
-
-                    @Override
-                    public void onError(Throwable e) {
-                        Log.e(TAG, "onError: " + e.getMessage());
-                    }
-
-                    @Override
-                    public void onNext(ResponseBody responseBody) {
-                        Log.e(TAG, "onNext: " + responseBody.toString());
-                    }
-                });
+        Observable<ResponseBody> observable= retrofitService.get();
+        HttpObserver<ResponseBody> httpObserver=new HttpObserver<ResponseBody>(this, new HttpObserver.OnNextListener() {
+            @Override
+            public void onNext(Object o) {
+                Log.e(TAG, "onNext: "+o.toString());
+            }
+        });
+        RetrofitConfig.getInstance().statrPostTask(observable, httpObserver);
     }
 }

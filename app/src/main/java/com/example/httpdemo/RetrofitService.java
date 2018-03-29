@@ -1,9 +1,9 @@
 package com.example.httpdemo;
 
+import io.reactivex.Observable;
 import okhttp3.ResponseBody;
 import retrofit2.http.GET;
 import retrofit2.http.Query;
-import rx.Observable;
 
 /**
  * Created by Administrator on 2018-02-25.
@@ -11,7 +11,7 @@ import rx.Observable;
 
 public interface RetrofitService {
     @GET("book/search")
-    Observable<ResultBean> getSearchBook(@Query("q") String name, @Query("count") int count);
+    Observable<RequestResults<ResultBean>> getSearchBook(@Query("q") String name, @Query("count") int count);
 
     @GET("/")
     Observable<ResponseBody> get();
